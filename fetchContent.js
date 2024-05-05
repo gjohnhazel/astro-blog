@@ -2,6 +2,7 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { format, parseISO } from 'date-fns';
 
 dotenv.config();
 
@@ -21,11 +22,50 @@ const fetchContentList = async () => {
     }
 };
 
-// Function to save content to the local file system
+// Function to transform markdown content by reformatting dates, removing the first H1,
+// and wrapping frontmatter values in single quotes
+const transformContent = (content) => {
+    // Regex to find YAML frontmatter at the top of the markdown file
+    const frontmatterRegex = /^(---\n[\s\S]+?\n---)/;
+    let frontmatter = content.match(frontmatterRegex);
+
+    if (frontmatter && frontmatter.length > 0) {
+        // Process each line in the frontmatter
+        frontmatter = frontmatter[0].split('\n').map(line => {
+            return line.replace(/^(.*?):\s*(.*)$/, (match, key, value) => {
+                // Rename 'date' key to 'pubDate'
+                if (key === 'date') {
+                    key = 'pubDate';
+                }
+                // Ensure all values are wrapped in double quotes and handle escaping
+                if (!value.match(/^".*?"$/)) {
+                    // Replace internal double quotes with escaped double quotes
+                    value = `"${value.replace(/"/g, '\\"')}"`;
+                }
+                return `${key}: ${value}`;
+            });
+        }).join('\n');
+    }
+
+    // Replace the old frontmatter with the new transformed frontmatter
+    content = content.replace(frontmatterRegex, frontmatter);
+
+    // Remove the first H1 header
+    content = content.replace(/^\s*#\s*(.*)\s*$/m, '');
+
+    return content;
+};
+
+
+
+// Example usage in the saveContentToLocal function
 const saveContentToLocal = async (content, filename) => {
     const filePath = path.join('src/content/blog', filename);
-    await fs.writeFile(filePath, content);
+    const transformedContent = transformContent(content);
+    await fs.writeFile(filePath, transformedContent);
 };
+
+
 
 // Function to fetch and save blog posts
 const updateLocalBlogPosts = async () => {
