@@ -1,13 +1,16 @@
 ---
+// Import server-side functions and components
 import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
-import { getCollection } from 'astro:content';
-import FormattedDate from '../../components/FormattedDate.astro';
+// import FormattedDate from '../../components/FormattedDate.astro';
+import { fetchPosts } from '../../functions/fetchContent.js'; // Make sure this path is correct
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf()
+// Fetch posts from GitHub instead of local content
+let posts = await fetchPosts();
+posts = posts.sort(
+	(a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf()
 );
 ---
 
@@ -92,12 +95,13 @@ const posts = (await getCollection('blog')).sort(
 				<ul>
 					{
 						posts.map((post) => (
-							<li>
+							<li key={post.slug}>
 								<a href={`/blog/${post.slug}/`}>
-									<img width={720} height={360} src={post.data.heroImage} alt="" />
-									<h4 class="title">{post.data.title}</h4>
+									<img width={720} height={360} src={post.download_url} alt="" />
+									<h4 class="title">{post.name}</h4>
 									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
+										{/* Check if date is valid, if not provide a default or empty string */}
+										{/* <FormattedDate date={new Date(post.date && !isNaN(new Date(post.date).valueOf()) ? post.date : '')} /> */}
 									</p>
 								</a>
 							</li>
@@ -105,6 +109,7 @@ const posts = (await getCollection('blog')).sort(
 					}
 				</ul>
 			</section>
+					
 		</main>
 		<Footer />
 	</body>
