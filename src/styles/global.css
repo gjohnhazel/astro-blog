@@ -152,3 +152,113 @@ hr {
 	/* added line to stop words getting smushed together (as they go onto seperate lines and some screen readers do not understand line feeds as a space */
 	white-space: nowrap;
 }
+
+:root {
+	--bg-background: linear-gradient(rgba(var(--gray-light), 50%), #fff); /* Light mode gradient */
+    --text-color: rgb(var(--gray-dark)); /* Set text color for light mode */
+
+    --bg-gradient: linear-gradient(rgba(var(--gray-light), 50%), #fff); /* Light mode gradient */
+
+	--code-bg-light: rgb(var(--gray-light)); /* Existing light mode code background */
+    --footer-gradient-light: linear-gradient(to bottom, #ffffff, rgba(var(--gray-light), 50%)); /* Light mode footer gradient */
+    --header-bg-light: #ffffff; /* Light mode header background */
+
+    --text-light: #ffffff; /* Light mode text color for specific elements */
+}
+
+.dark-mode {
+	--bg-background: rgb(2, 6, 23); /* Dark mode solid background */
+    --text-color: #ffffff; /* Set text color for dark mode */
+
+    --bg-gradient: linear-gradient(rgba(var(--black), 0.65), rgb(2, 6, 23)); /* Dark mode gradient for consistency */
+
+	--code-bg-dark: #000000; /* Dark mode code background */
+    --footer-gradient-dark: linear-gradient(to bottom, rgb(var(--black), 0.65), rgb(2, 6, 23)); /* Dark mode footer gradient */
+    --header-bg-dark: rgb(2, 6, 23); /* Dark mode header background */
+}
+
+html, body {
+    height: 100%; /* Ensures that both html and body take up at least the full height of the viewport */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column; /* Helps manage the inner content */
+    font-family: 'Atkinson', sans-serif;
+    text-align: left;
+	background: var(--bg-background); /* Uses variable that will change based on mode */
+    background-size: cover; /* Ensures the background covers the entire body */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    color: var(--text-color);
+    font-size: 20px;
+    line-height: 1.7;
+    transition: background-color 0.3s, color 0.3s, background 0.3s; /* Includes background to cover gradient transitions */
+}
+
+main {
+    flex: 1 0 auto; /* Takes necessary space */
+    width: 720px;
+    max-width: calc(100% - 2em);
+    margin: auto;
+    padding: 3em 1em;
+}
+
+footer, header {
+    flex-shrink: 0; /* Ensures that footer and header do not shrink */
+    background-color: var(--bg-color);
+    transition: background-color 0.3s;
+}
+
+/* Light Mode Styles (default) */
+a {
+    color: var(--text-color); /* Set the default color for light mode */
+    transition: color 0.3s; /* Smooth transition for color */
+}
+
+/* Dark Mode Styles */
+.dark-mode a {
+    color: var(--text-light); /* Set color to white or other light color for dark mode */
+	transition: color 0.3s;
+}
+
+/* Dark Mode Styles */
+.dark-mode a .title {
+    color: #ffffff; /* Ensures titles in links are white in dark mode */
+}
+
+
+
+.dark-mode h1, h2, h3, h4, h5 {
+    color: var(--text-light); /* Makes H1 and links white in dark mode */
+    transition: color 0.3s;
+}
+
+.dark-mode code {
+    background-color: var(--code-bg-dark); /* Dark mode code background */
+}
+
+.dark-mode footer {
+    background: var(--header-bg-dark); /* Dark mode gradient for footer */
+}
+
+.dark-mode header {
+    background-color: var(--header-bg-dark); /* Dark mode header background */
+}
+
+/* General nav link styles applicable for all modes */
+nav a {
+    padding: 1em 0.5em;
+    color: rgb(var(--black)); /* Ensures color is set for light mode too, if not already set */
+    border-bottom: 4px solid transparent;
+    text-decoration: none;
+    transition: color 0.3s, border-bottom-color 0.3s; /* Smooth transition for color and border changes */
+}
+
+/* Specific adjustments for dark mode */
+.dark-mode nav a {
+    color: #ffffff; /* Sets text color to white in dark mode */
+    border-bottom-color: var(--code-bg-dark);
+}
