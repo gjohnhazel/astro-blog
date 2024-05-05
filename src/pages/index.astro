@@ -3,6 +3,12 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+
+import { fetchMainNav, fetchOtherPages, fetchPosts } from '../functions/fetchContent.js';
+
+// const mainNavItems = await fetchMainNav();
+// const otherPages = await fetchOtherPages();
+const blogPosts = await fetchPosts();
 ---
 
 <!doctype html>
@@ -15,36 +21,20 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 		<main>
 			<h1>🧑‍🚀 Hello, Astronaut!</h1>
 			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
+				Welcome to the official blog of John Hazel.
 			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/pages/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<p>For more about John Hazel, visit my <a href="https://johnhazel.com" target="_blank">portfolio website.</a></p>
+			<p>If you're interested in working with me to get a website built, or any other kind of technology work, check out <a href="hazelize.com" target="_blank">Hazelize.</a></p>
+			<p>If you're a ministry leader, check out <a href="https://churchpl.us" target="_blank">Churchpl.us</a></p>
+			<p>I'm a passionate and intellectually curious individual, deeply engaged in exploring the interconnectedness of various knowledge systems. I have a broad spectrum of interests ranging from personal development and spirituality to structured frameworks like GTD (Getting Things Done) and the Working Genius model. My approach is both philosophical and introspective, and I spend considerable time reflecting on cognitive functions, spirituality, and personal growth.</p>
+			<p>In my life, professional and personal pursuits are closely intertwined with intellectual exploration, highlighting my commitment to lifelong learning and self-improvement. I draw insights from a range of disciplines, applying them to enhance both my professional output and personal fulfillment. Engaged with diverse concepts such as leadership, discernment, and decision-making, I position myself as a thoughtful and reflective thinker, always seeking to apply theoretical knowledge in practical, life-enhancing ways. This blog serves as a platform to share my journey and the valuable lessons I've learned along the way.</p>
 		</main>
+		<h2 style="margin-left: 20px;">Latest Posts</h2>
+		<ul>
+			{blogPosts.map(post => (
+				<li key={post.name}><a href={post.download_url}>{post.name}</a></li>
+			))}
+		</ul>
 		<Footer />
 	</body>
 </html>
