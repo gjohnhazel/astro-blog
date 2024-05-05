@@ -1,18 +1,22 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import { promises as fs } from 'fs';
-import path from 'path';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { format, parseISO } from 'date-fns';
 
 dotenv.config();
 
-const githubBaseUrl = "https://api.github.com/repos/gjohnhazel/obsidian/contents/Blog/posts";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const githubBaseUrlImages = "https://api.github.com/repos/gjohnhazel/obsidian/contents/Blog/images";
+const githubBaseUrlPosts = "https://api.github.com/repos/gjohnhazel/obsidian/contents/Blog/posts";
 const token = process.env.GITHUB_TOKEN;
+const publicDir = resolve(__dirname, 'public');  // Path to the public directory for images
 
 // Function to fetch the directory listing from GitHub
 const fetchContentList = async () => {
     try {
-        const response = await axios.get(githubBaseUrl, {
+        const response = await axios.get(githubBaseUrlPosts, {
             headers: { 'Authorization': `token ${token}` }
         });
         return response.data;
@@ -22,35 +26,59 @@ const fetchContentList = async () => {
     }
 };
 
-// Function to transform markdown content by reformatting dates, removing the first H1,
-// and wrapping frontmatter values in single quotes
-const transformContent = (content) => {
-    // Regex to find YAML frontmatter at the top of the markdown file
-    const frontmatterRegex = /^(---\n[\s\S]+?\n---)/;
-    let frontmatter = content.match(frontmatterRegex);
+// Function to fetch and save an image
+const fetchAndSaveImage = async (imageName) => {
+    imageName = imageName.replace(/^"|"$/g, '');  // Remove quotes that may be included in the imageName.
+    const imageUrl = `https://raw.githubusercontent.com/gjohnhazel/obsidian/main/Blog/images/${encodeURIComponent(imageName)}`;
 
-    if (frontmatter && frontmatter.length > 0) {
-        // Process each line in the frontmatter
-        frontmatter = frontmatter[0].split('\n').map(line => {
-            return line.replace(/^(.*?):\s*(.*)$/, (match, key, value) => {
-                // Rename 'date' key to 'pubDate'
-                if (key === 'date') {
-                    key = 'pubDate';
-                }
-                // Ensure all values are wrapped in double quotes and handle escaping
-                if (!value.match(/^".*?"$/)) {
-                    // Replace internal double quotes with escaped double quotes
-                    value = `"${value.replace(/"/g, '\\"')}"`;
-                }
-                return `${key}: ${value}`;
-            });
-        }).join('\n');
+
+    try {
+        const response = await axios.get(imageUrl, {
+            headers: { 'Authorization': `token ${token}` },
+            responseType: 'arraybuffer'  // Ensure the response is treated as binary data
+        });
+        const targetPath = join(publicDir, imageName);
+        await fs.writeFile(targetPath, response.data);  // Write the binary data directly to disk
+        console.log(`Image saved to ${targetPath}`);
+        return targetPath.replace(__dirname, '');
+    } catch (error) {
+        console.error(`Error fetching or saving image ${imageName}:`, error);
+        return '';
+    }
+};
+
+
+// Adjust transformContent to ensure correct filename extraction and usage
+const transformContent = async (content) => {
+    const frontmatterRegex = /^(---\n[\s\S]+?\n---)/;
+    let frontmatterSection = content.match(frontmatterRegex)[0];
+    let frontmatterLines = frontmatterSection.split('\n');
+
+    frontmatterLines = frontmatterLines.map(line => {
+        return line.replace(/^(.*?):\s*"?(.*?)"?$/, (match, key, value) => {
+            if (key.trim() === 'date') {
+                value = format(parseISO(value.trim()), 'MMM dd yyyy'); // Reformat the date
+                key = 'pubDate'; // Rename key
+            }
+            return `${key}: "${value}"`; // Ensure all values are correctly quoted
+        });
+    });
+
+    frontmatterSection = frontmatterLines.join('\n');
+
+    // Handle image replacement
+    const imageRegex = /^image:\s*"?(.*?)"?$/m;
+    const imageMatch = frontmatterSection.match(imageRegex);
+    if (imageMatch) {
+        const imagePath = await fetchAndSaveImage(imageMatch[1].trim());
+        frontmatterSection = frontmatterSection.replace(imageRegex, `heroImage: "${imagePath}"`);
     }
 
-    // Replace the old frontmatter with the new transformed frontmatter
-    content = content.replace(frontmatterRegex, frontmatter);
+    // Replace old frontmatter in the content
+    content = content.replace(frontmatterRegex, frontmatterSection);
 
-    // Remove the first H1 header
+    // Other transformations
+    content = content.replace(/!\[\[(.*?)\]\]/g, '');
     content = content.replace(/^\s*#\s*(.*)\s*$/m, '');
 
     return content;
@@ -58,14 +86,12 @@ const transformContent = (content) => {
 
 
 
-// Example usage in the saveContentToLocal function
+// Function to save content to the local file system
 const saveContentToLocal = async (content, filename) => {
-    const filePath = path.join('src/content/blog', filename);
-    const transformedContent = transformContent(content);
+    const filePath = join('src/content/blog', filename);
+    const transformedContent = await transformContent(content);
     await fs.writeFile(filePath, transformedContent);
 };
-
-
 
 // Function to fetch and save blog posts
 const updateLocalBlogPosts = async () => {
