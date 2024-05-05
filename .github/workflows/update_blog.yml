@@ -1,0 +1,36 @@
+name: Update Blog Content on Dispatch
+
+on:
+  repository_dispatch:
+    types: [update-blog]  # This should match the dispatch type sent from the Obsidian repo
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest  # Or any other runner you prefer
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'  # Specify your project's Node.js version
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Fetch Latest Content
+      run: node fetchContent.js  # Assuming you have a script to update content from Obsidian
+
+    - name: Build Site
+      run: npm run build  # Or your specific build command
+
+    - name: Deploy to Vercel
+      run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+      env:
+        CI: true  # Ensures that Vercel runs in CI-mode
+
+    - name: Cleanup if needed
+      run: echo "Cleanup tasks"
+
