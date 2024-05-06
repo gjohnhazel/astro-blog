@@ -1,6 +1,6 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { promises as fs } from 'fs';
+import fs from 'fs/promises';  // Use fs from 'fs/promises' to ensure promise-based operations
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { format, parseISO } from 'date-fns';
@@ -8,39 +8,112 @@ import { format, parseISO } from 'date-fns';
 dotenv.config();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const githubBaseUrlImages = "https://api.github.com/repos/gjohnhazel/obsidian/contents/Blog/images";
-const githubBaseUrlPosts = "https://api.github.com/repos/gjohnhazel/obsidian/contents/Blog/posts";
 const token = process.env.GITHUB_TOKEN;
 const publicDir = resolve(__dirname, 'public');  // Path to the public directory for images
+const graphqlEndpoint = 'https://api.github.com/graphql';
 
-// Function to fetch the directory listing from GitHub
-const fetchContentList = async () => {
+// Define ensureDirectoryExistence
+const ensureDirectoryExistence = async (filePath) => {
+    const dir = dirname(filePath);
     try {
-        const response = await axios.get(githubBaseUrlPosts, {
-            headers: { 'Authorization': `token ${token}` }
+        await fs.access(dir);
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            await fs.mkdir(dir, { recursive: true });
+        } else {
+            throw error;
+        }
+    }
+};
+
+// Function to fetch the directory listing from GitHub using GraphQL API
+const fetchContentList = async () => {
+    const query = `
+    {
+        repository(owner: "gjohnhazel", name: "obsidian") {
+            object(expression: "main:Blog/posts") {
+                ... on Tree {
+                    entries {
+                        name
+                        object {
+                            ... on Blob {
+                                oid
+                                text
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }`;
+
+    try {
+        const response = await axios.post(graphqlEndpoint, { query }, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
         });
-        return response.data;
+        console.log("GraphQL Response:", JSON.stringify(response.data, null, 2));
+        return response.data.data.repository.object.entries;
     } catch (error) {
         console.error(`Error fetching content list:`, error);
         return [];
     }
 };
 
-// Function to fetch and save an image
-const fetchAndSaveImage = async (imageName) => {
-    imageName = imageName.replace(/^"|"$/g, '');  // Remove quotes that may be included in the imageName.
-    const imageUrl = `https://raw.githubusercontent.com/gjohnhazel/obsidian/main/Blog/images/${encodeURIComponent(imageName)}`;
+const transformContent = async (content) => {
+    const frontmatterRegex = /^(---\n[\s\S]+?\n---)/;
+    let frontmatterSection = content.match(frontmatterRegex)[0];
 
+    // Transforming the frontmatter block
+    let transformedFrontmatter = frontmatterSection
+        .split('\n')
+        .map(line => {
+            // Format the date and convert 'date' to 'pubDate'
+            if (line.startsWith('date:')) {
+                const date = line.split('date: ')[1].trim();
+                const formattedDate = format(parseISO(date), 'MMM dd yyyy');
+                return `pubDate: "${formattedDate}"`;
+            }
+            // Convert 'image' to 'heroImage'
+            if (line.startsWith('image:')) {
+                const image = line.split('image: ')[1].trim();
+                return `heroImage: "/${image}"`;
+            }
+            // Ensure all values are correctly quoted
+            return line.replace(/^(.*?): (.*)$/, (match, key, value) => `${key}: "${value.replace(/"/g, '\\"')}"`);
+        })
+        .join('\n');
+
+    // Replace the original frontmatter with the transformed one
+    content = content.replace(frontmatterRegex, transformedFrontmatter);
+
+    // Regex to remove the first Markdown header immediately following the frontmatter
+    content = content.replace(/(\n---\n)\s*#\s*.+\n/, '$1');
+
+    // Removing Obsidian image links
+    content = content.replace(/!\[\[(.*?)\]\]/g, '');
+
+    return content;
+};
+
+
+
+// Function to fetch and save an image, ensuring it saves to the public directory
+const fetchAndSaveImage = async (imageName) => {
+    imageName = imageName.replace(/^"|"$/g, '');  // Clean up imageName
+    const imageUrl = `https://raw.githubusercontent.com/gjohnhazel/obsidian/main/Blog/images/${encodeURIComponent(imageName)}`;
 
     try {
         const response = await axios.get(imageUrl, {
-            headers: { 'Authorization': `token ${token}` },
-            responseType: 'arraybuffer'  // Ensure the response is treated as binary data
+            headers: { 'Authorization': `Bearer ${token}` },
+            responseType: 'arraybuffer'
         });
         const targetPath = join(publicDir, imageName);
-        await fs.writeFile(targetPath, response.data);  // Write the binary data directly to disk
+        await fs.writeFile(targetPath, response.data);
         console.log(`Image saved to ${targetPath}`);
-        return targetPath.replace(__dirname, '');
+        return `/${imageName}`;  // Update to use relative path suitable for web access
     } catch (error) {
         console.error(`Error fetching or saving image ${imageName}:`, error);
         return '';
@@ -48,64 +121,16 @@ const fetchAndSaveImage = async (imageName) => {
 };
 
 
-// Adjust transformContent to ensure correct filename extraction and usage
-const transformContent = async (content) => {
-    const frontmatterRegex = /^(---\n[\s\S]+?\n---)/;
-    let frontmatterSection = content.match(frontmatterRegex)[0];
-    let frontmatterLines = frontmatterSection.split('\n');
-
-    frontmatterLines = frontmatterLines.map(line => {
-        return line.replace(/^(.*?):\s*"?(.*?)"?$/, (match, key, value) => {
-            if (key.trim() === 'date') {
-                value = format(parseISO(value.trim()), 'MMM dd yyyy'); // Reformat the date
-                key = 'pubDate'; // Rename key
-            }
-            return `${key}: "${value}"`; // Ensure all values are correctly quoted
-        });
-    });
-
-    frontmatterSection = frontmatterLines.join('\n');
-
-    // Handle image replacement
-    const imageRegex = /^image:\s*"?(.*?)"?$/m;
-    const imageMatch = frontmatterSection.match(imageRegex);
-    if (imageMatch) {
-        const imagePath = await fetchAndSaveImage(imageMatch[1].trim());
-        frontmatterSection = frontmatterSection.replace(imageRegex, `heroImage: "${imagePath}"`);
-    }
-
-    // Replace old frontmatter in the content
-    content = content.replace(frontmatterRegex, frontmatterSection);
-
-    // Other transformations
-    content = content.replace(/!\[\[(.*?)\]\]/g, '');
-    content = content.replace(/^\s*#\s*(.*)\s*$/m, '');
-
-    return content;
-};
-
-
-
-// Function to save content to the local file system
-const saveContentToLocal = async (content, filename) => {
-    const filePath = join('src/content/blog', filename);
-    const transformedContent = await transformContent(content);
-    await fs.writeFile(filePath, transformedContent);
-};
-
-// Function to fetch and save blog posts
 const updateLocalBlogPosts = async () => {
     const posts = await fetchContentList();
     for (const post of posts) {
-        if (post.type === 'file') {
-            try {
-                const fileResponse = await axios.get(post.download_url, {
-                    headers: { 'Authorization': `token ${token}` }
-                });
-                await saveContentToLocal(fileResponse.data, post.name);
-            } catch (error) {
-                console.error(`Error fetching or saving file ${post.name}:`, error);
-            }
+        try {
+            const content = await transformContent(post.object.text);
+            const filePath = join('src/content/blog', post.name);
+            await ensureDirectoryExistence(filePath);
+            await fs.writeFile(filePath, content);
+        } catch (error) {
+            console.error(`Error processing file ${post.name}:`, error);
         }
     }
 };
