@@ -92,11 +92,11 @@ const transformContent = async (content) => {
     // Replace the original frontmatter with the transformed one
     content = content.replace(frontmatterRegex, transformedFrontmatter);
 
-    // Regex to remove the first Markdown header immediately following the frontmatter
-    content = content.replace(/(\n---\n)\s*#\s*.+\n/, '$1');
-
     // Removing Obsidian image links
     content = content.replace(/!\[\[(.*?)\]\]/g, '');
+
+    // Regex to remove the first Markdown header immediately following the frontmatter
+    content = content.replace(/(\n---\n)\s*#\s*.+\n/, '$1');
 
     return content;
 };
