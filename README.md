@@ -1,3 +1,18 @@
+# Local Dev Env
+To run in local dev env:
+> npm run dev
+
+> node fetchContent.js
+
+
+# CI/CD Pipeline
+- new push at gjohnhazel/obsidian/Blog/**
+- obsidian repo GitHub Action triggers gjohnhazel/astro-blog GH Action
+- astro-blog runs a vercel deploy command
+    - now that I think about it, I could just have this happen in the obsidian repo GH action, but oh well, it's working anyway!
+- Vercel deploys, including running the fetchContent.js script which grabs the new content from the obsidian repo
+
+---
 # Astro Starter Kit: Blog
 
 ```sh
