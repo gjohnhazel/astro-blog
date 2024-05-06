@@ -254,7 +254,7 @@ h1, h2, h3, h4, h5 {
 /* General nav link styles applicable for all modes */
 nav a {
     padding: 1em 0.5em;
-    color: rgb(var(--black)); /* Ensures color is set for light mode too, if not already set */
+    color: rgb(var(--header-bg-dark)); /* Ensures color is set for light mode too, if not already set */
     border-bottom: 4px solid transparent;
     text-decoration: none;
     transition: color 0.3s, border-bottom-color 0.3s; /* Smooth transition for color and border changes */
@@ -263,5 +263,5 @@ nav a {
 /* Specific adjustments for dark mode */
 .dark-mode nav a {
     color: #ffffff; /* Sets text color to white in dark mode */
-    border-bottom-color: var(--code-bg-dark);
+    border-bottom-color: var(--header-bg-dark);
 }
