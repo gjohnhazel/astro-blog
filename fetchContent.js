@@ -66,25 +66,28 @@ const transformContent = async (content) => {
     const frontmatterRegex = /^(---\n[\s\S]+?\n---)/;
     let frontmatterSection = content.match(frontmatterRegex)[0];
 
+    let heroImagePath = '';  // To store the path of the hero image
+
     // Transforming the frontmatter block
     let transformedFrontmatter = frontmatterSection
         .split('\n')
-        .map(line => {
-            // Format the date and convert 'date' to 'pubDate'
+        .map(async line => {  // Use async inside map to handle async operations
             if (line.startsWith('date:')) {
                 const date = line.split('date: ')[1].trim();
                 const formattedDate = format(parseISO(date), 'MMM dd yyyy');
                 return `pubDate: "${formattedDate}"`;
             }
-            // Convert 'image' to 'heroImage'
             if (line.startsWith('image:')) {
-                const image = line.split('image: ')[1].trim();
-                return `heroImage: "/${image}"`;
+                const imageName = line.split('image: ')[1].trim();
+                heroImagePath = await fetchAndSaveImage(imageName);  // Fetch and save the image
+                return `heroImage: "${heroImagePath}"`;  // Use the saved image path
             }
-            // Ensure all values are correctly quoted
             return line.replace(/^(.*?): (.*)$/, (match, key, value) => `${key}: "${value.replace(/"/g, '\\"')}"`);
-        })
-        .join('\n');
+        });
+
+    // Await all promises from map (since map is not awaited, we use Promise.all to resolve all promises)
+    transformedFrontmatter = await Promise.all(transformedFrontmatter);
+    transformedFrontmatter = transformedFrontmatter.join('\n');
 
     // Replace the original frontmatter with the transformed one
     content = content.replace(frontmatterRegex, transformedFrontmatter);
@@ -97,6 +100,7 @@ const transformContent = async (content) => {
 
     return content;
 };
+
 
 
 
