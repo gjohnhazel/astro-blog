@@ -15,13 +15,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14'  # Specify your project's Node.js version
-
-    - name: Install Dependencies
-      run: npm install
-
-    - name: Build Site
-      run: npm run build  # Or your specific build command
+        node-version: '20'  # Specify your project's Node.js version
 
     - name: Deploy to Vercel
       run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
