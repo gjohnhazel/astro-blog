@@ -20,9 +20,6 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Fetch Latest Content
-      run: node fetchContent.js  # Assuming you have a script to update content from Obsidian
-
     - name: Build Site
       run: npm run build  # Or your specific build command
 
