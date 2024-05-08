@@ -36,7 +36,7 @@ jobs:
     - name: Checkout Obsidian repo
       uses: actions/checkout@v2
       with:
-        repository: 'obsidian'
+        repository: 'gjohnhazel/obsidian'
         path: 'obsidian'
 
     - name: Run script
