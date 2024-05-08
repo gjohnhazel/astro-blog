@@ -13,6 +13,21 @@ To run in local dev env:
 - Vercel deploys, including running the fetchContent.js script which grabs the new content from the obsidian repo
 
 ---
+
+# TODO
+- [ ] add category function
+- [ ] add tagging function
+- [ ] add RSS feed
+- [ ] add e-mail subscription
+
+
+
+
+
+
+
+
+---
 # Astro Starter Kit: Blog
 
 ```sh
