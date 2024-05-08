@@ -28,16 +28,19 @@ jobs:
   notify-new-post:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
+    - name: Checkout Astro Blog repo
+      uses: actions/checkout@v2
+      with:
+        path: 'astro-blog'
+    
+    - name: Checkout Obsidian repo
+      uses: actions/checkout@v2
+      with:
+        repository: 'gjohnhazel/obsidian'
+        path: 'obsidian'
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'  # Specify the Node.js version you need
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run the notification script
-        run: node .github/scripts/checkAndSendEmails.js
+    - name: Run script
+      run: node astro-blog/.github/scripts/checkAndSendEmails.js
+      env:
+        CONTENT_DIR: ${{ github.workspace }}/obsidian/Blog/posts
+    

@@ -55,21 +55,23 @@ async function fetchEmailAddresses() {
 
 
 async function checkAndSendEmails() {
-  const postsDirectory = path.join(process.cwd(), 'src/content/blog');
+  const contentDirectory = process.env.CONTENT_DIR; // Use environment variable
+  const postsDirectory = contentDirectory;
   const files = fs.readdirSync(postsDirectory);
-  const allEmails = await fetchEmailAddresses(); // Get all emails from Teable
 
   for (const file of files) {
-      const postContent = fs.readFileSync(path.join(postsDirectory, file), 'utf-8');
-      const postTitle = extractTitle(postContent);
+    const postContent = fs.readFileSync(path.join(postsDirectory, file), 'utf-8');
+    const postTitle = extractTitle(postContent);
 
-      const exists = await checkPostInTeable(postTitle);
-      if (!exists) {
-          sendEmail(postTitle, 'New post published on John Hazel\'s Blog', postContent, allEmails);
-          addToTeable(postTitle);
-      }
+    const exists = await checkPostInTeable(postTitle);
+    if (!exists) {
+      const allEmails = await fetchEmailAddresses();
+      sendEmail(postTitle, 'New post published on John Hazel\'s Blog', postContent, allEmails);
+      addToTeable(postTitle);
+    }
   }
 }
+
 
 
 function extractTitle(postContent) {
