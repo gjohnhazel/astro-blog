@@ -6,50 +6,71 @@ import { fileURLToPath } from 'url';
 import process from 'process';
 
 const TEABLE_API_KEY = process.env.TEABLE_API_KEY;
-const TABLE_ID = 'tbluPHQDU9BKNd9VDAR'; // Replace with your actual table ID from Teable
+const TABLE_ID = 'tbluPHQDU9BKNd9VDAR'; // Table ID for Posts
+const TABLE_ID_EMAILS = 'tblQrs7kiJsqHui8JbC';
 
-async function sendEmail(postTitle, subject, content) {
-  const email = 'john@johnhazel.com'; // Set the recipient email address
-  const apiEndpoint = 'http://localhost:3000/api/sendEmail'; // URL where your sendEmail function is accessible
+async function sendEmail(postTitle, subject, content, emails) {
+  const apiEndpoint = 'http://localhost:3000/api/sendEmail';
+  for (const email of emails) {
+      const response = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              email: email,
+              subject: subject,
+              content: content
+          })
+      });
 
-  const response = await fetch(apiEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      email: email, // the recipient's email address
-      subject: subject, // subject of the email
-      content: content // body of the email
-    })
+      if (!response.ok) {
+          const errorData = await response.text();
+          console.error(`Failed to send email to ${email}: ${errorData}`);
+          continue; // Continue to next email if one fails
+      }
+
+      console.log('Email sent successfully to:', email);
+  }
+}
+
+
+async function fetchEmailAddresses() {
+  const apiUrl = `https://app.teable.io/api/table/${TABLE_ID_EMAILS}/record`;
+  const response = await fetch(apiUrl, {
+      headers: {
+          'Authorization': `Bearer ${TEABLE_API_KEY}`
+      }
   });
 
   if (!response.ok) {
-    const errorData = await response.text();
-    throw new Error(`Failed to send email: ${errorData}`);
+      const errorData = await response.text();
+      console.error("Failed to fetch email addresses:", errorData);
+      return [];  // Return an empty array to handle gracefully
   }
 
-  console.log('Email sent successfully to:', email);
+  const data = await response.json();
+  return data.records.map(record => record.fields.Email); // Assuming 'Email' is the field name
 }
+
 
 async function checkAndSendEmails() {
   const postsDirectory = path.join(process.cwd(), 'src/content/blog');
   const files = fs.readdirSync(postsDirectory);
+  const allEmails = await fetchEmailAddresses(); // Get all emails from Teable
 
   for (const file of files) {
-    const postContent = fs.readFileSync(path.join(postsDirectory, file), 'utf-8');
-    const postTitle = extractTitle(postContent); // You need to define how to extract the title
+      const postContent = fs.readFileSync(path.join(postsDirectory, file), 'utf-8');
+      const postTitle = extractTitle(postContent);
 
-    // Check if post exists in Teable and if email was sent
-    const exists = await checkPostInTeable(postTitle);
-    if (!exists) {
-      // Assuming you have a function to send emails
-      sendEmail(postTitle, 'New post published on John Hazel\'s Blog', postContent);
-      // Add post to Teable or mark it as emailed
-      addToTeable(postTitle);
-    }
+      const exists = await checkPostInTeable(postTitle);
+      if (!exists) {
+          sendEmail(postTitle, 'New post published on John Hazel\'s Blog', postContent, allEmails);
+          addToTeable(postTitle);
+      }
   }
 }
+
 
 function extractTitle(postContent) {
   // Match the frontmatter block

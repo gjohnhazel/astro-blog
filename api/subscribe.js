@@ -14,7 +14,7 @@ export default async function (req, res) {
         {
           "fields": {
             "Name": name,
-            "Email Address": email  // Ensure this matches exactly how it's named in your Teable table
+            "Email": email  // Ensure this matches exactly how it's named in your Teable table
           }
         }
       ]

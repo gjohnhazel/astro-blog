@@ -18,9 +18,11 @@ To run in local dev env:
 - [ ] add category function
 - [ ] add tagging function
 - [ ] add RSS feed
-- [ ] add e-mail subscription
+- [x] add e-mail subscribing
+- [ ] add e-mail auto-sending with new blog post
 - [ ] format e-mails
 - [ ] add commenting
+- [ ] improve the subscription confirmation
 
 
 

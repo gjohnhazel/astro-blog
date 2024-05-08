@@ -11,7 +11,7 @@ async function sendEmailToSubscribers(postTitle, postUrl) {
 
   // Send email to each subscriber
   subscribers.records.forEach(subscriber => {
-    const email = subscriber.fields['Email Address'];
+    const email = subscriber.fields['Email'];
     const name = subscriber.fields['Name'];
     
     // Construct the email message
