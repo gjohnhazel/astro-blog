@@ -19,6 +19,8 @@ To run in local dev env:
 - [ ] add tagging function
 - [ ] add RSS feed
 - [ ] add e-mail subscription
+- [ ] format e-mails
+- [ ] add commenting
 
 
 
