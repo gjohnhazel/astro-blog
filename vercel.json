@@ -1,4 +1,7 @@
 {
-    "name": "astro-blog"
-  }
-  
+  "name": "astro-blog",
+  "version": 2,
+  "routes": [
+    { "src": "/api/subscribe", "dest": "/api/subscribe.js" }
+  ]
+}
