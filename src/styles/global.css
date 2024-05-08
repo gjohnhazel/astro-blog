@@ -265,3 +265,35 @@ nav a {
     color: #ffffff; /* Sets text color to white in dark mode */
     border-bottom-color: var(--header-bg-dark);
 }
+
+
+
+
+form {
+    max-width: 300px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid var(--gray-light); /* Adjust the color as needed */
+    border-radius: 8px;
+    background: var(--gray-gradient); /* Adjust the gradient as needed */
+	float: left;
+  }
+  input[type="email"], input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--gray-dark);
+    border-radius: 4px;
+  }
+  button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--accent); /* Adjust the accent color as needed */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: var(--accent-dark); /* Adjust for hover state */
+  }
