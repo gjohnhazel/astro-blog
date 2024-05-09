@@ -7,7 +7,7 @@ import FormattedDate from '../components/FormattedDate.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, category } = Astro.props;
 ---
 
 <html lang="en">
@@ -47,6 +47,10 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 				margin-bottom: 0.5em;
 				color: rgb(var(--gray));
 			}
+			.category {
+				margin-bottom: 0.5em;
+				color: rgb(var(--gray));
+			}
 			.last-updated-on {
 				font-style: italic;
 			}
@@ -72,6 +76,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 								)
 							}
 						</div>
+						<div class="category">Category: <a href={`/category/${category.toLowerCase().replace(/\s+/g, '-')}`}>{category}</a></div>
 						<h1>{title}</h1>
 						<hr />
 					</div>

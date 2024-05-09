@@ -1,0 +1,26 @@
+---
+import { getCollection } from 'astro:content';
+import CategoryPage from '../../layouts/CategoryPage.astro';
+
+// Define the function inside the module to ensure it's in scope
+export async function getAllCategories() {
+    const posts = await getCollection('blog');
+    const categories = new Set(posts.map(post => post.data.category).filter(Boolean));
+    return Array.from(categories).map(category => ({
+        slug: category.toLowerCase().replace(/\s+/g, '-'),
+        name: category
+    }));
+}
+
+export async function getStaticPaths() {
+    const categories = await getAllCategories();
+    console.log(categories);  // Check what's being output here
+    return categories.map(category => ({
+        params: { slug: category.slug },
+        props: { category: category.name },
+    }));
+}
+
+---
+
+<CategoryPage category={Astro.props.category} />

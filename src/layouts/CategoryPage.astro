@@ -1,0 +1,99 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+
+// Import server-side functions and components
+import { getCollection } from 'astro:content';
+
+const { category } = Astro.props; // Receive the category from props
+const allPosts = await getCollection('blog');
+const posts = allPosts.filter(post => post.data.category === category);
+---
+<html lang="en">
+	<head>
+		<BaseHead title="Posts in {category}" />
+		<style>
+			main {
+				width: calc(100% - 2em);
+				max-width: 100%;
+				margin: 0;
+			}
+			.hero-image {
+				width: 100%;
+			}
+			.hero-image img {
+				display: block;
+				margin: 0 auto;
+				border-radius: 12px;
+				box-shadow: var(--box-shadow);
+			}
+			.prose {
+				width: 720px;
+				max-width: calc(100% - 2em);
+				margin: auto;
+				padding: 1em;
+			}
+			.title {
+				margin-bottom: 1em;
+				padding: 1em 0;
+				text-align: center;
+				line-height: 1;
+			}
+			.title h1 {
+				margin: 0 0 0.5em 0;
+			}
+			.date {
+				margin-bottom: 0.5em;
+				color: rgb(var(--gray));
+			}
+			.category {
+				margin-bottom: 0.5em;
+				color: rgb(var(--gray));
+			}
+			.last-updated-on {
+				font-style: italic;
+			}
+            .content {
+                margin: 0 auto;
+                width: 50%;
+            }
+
+            main {
+                width: 100%; /* Change from 720px to full width to see effect */
+                max-width: 960px; /* Adjust or remove to test changes */
+                margin: 0 auto; /* Ensure this centers the main block */
+                padding: 3em 1em; /* Adjust padding to see changes */
+                display: flex; /* Add flex to help with inner alignment */
+                flex-direction: column; /* Stack children vertically */
+                align-items: center; /* Center-align the flex items */
+            }
+
+            /* Specific styles for the category page */
+            .category-page main {
+                width: 80%; /* Example: Adjust width as needed */
+                margin: 2em auto; /* Increase margin top/bottom */
+            }
+
+
+
+		</style>
+	</head>
+
+	<body>
+		<Header />
+		<main class="category-page">
+            <section>
+                <h1>{category}</h1>
+                <ul>
+                    {posts.map(post => (
+                        <li><a href={`/blog/${post.slug}`}>{post.id}</a></li>
+                    ))}
+                </ul>
+            </section>
+		</main>
+		<Footer />
+	</body>
+</html>

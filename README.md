@@ -15,7 +15,7 @@ To run in local dev env:
 ---
 
 # TODO
-- [ ] add category function
+- [x] add category function
 - [ ] add tagging function
 - [ ] add RSS feed
 - [x] add e-mail subscribing
