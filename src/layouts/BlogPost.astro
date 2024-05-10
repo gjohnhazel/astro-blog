@@ -76,7 +76,17 @@ const { title, description, pubDate, updatedDate, heroImage, category } = Astro.
 								)
 							}
 						</div>
-						<div class="category">Category: <a href={`/category/${category.toLowerCase().replace(/\s+/g, '-')}`}>{category}</a></div>
+						<div class="category">
+							Category: 
+							{category ? (
+							  <a href={`/category/${category.toLowerCase().replace(/\s+/g, '-')}`}>
+								{category}
+							  </a>
+							) : (
+							  "Uncategorized"
+							)}
+						  </div>
+						  
 						<h1>{title}</h1>
 						<hr />
 					</div>
